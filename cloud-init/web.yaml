@@ -1,0 +1,62 @@
+#cloud-config
+
+package_update: true
+package_upgrade: true
+package_reboot_if_required: true
+
+packages:
+  - curl
+
+write_files:
+  - content: |
+      version: "3.7"
+      services:
+        proxy:
+          image: nginx:latest
+          restart: always
+          container_name: nginx_proxy
+          ports:
+            - 443:443
+            - 80:80
+          depends_on:
+            - ghost
+          networks:
+            - nginx
+          command: ["nginx", "-g", "daemon off;"]
+        ghost:
+          image: ghost:3-alpine
+          restart: always
+          container_name: ghost
+          environment:
+            database_client: mariadb
+            database_connection_user: ghostuser
+            database_connection_password: ${mysql_user_password}
+            database_connection_database: ghost
+            url: http://${cloudflare_zone}
+          depends_on:
+            - db-mysql
+          networks:
+            - nginx
+            - db-mysql
+        db-mysql:
+          image: mariadb:latest
+          restart: always
+          container_name: ghost_db
+          environment:
+            MYSQL_DATABASE: ghost
+            MYSQL_USER: ghostuser
+            MYSQL_PASSWORD: ${mysql_user_password}
+            MYSQL_ROOT_PASSWORD: ${mysql_password}
+          networks:
+            - db-mysql
+          expose:
+            - 3306
+      networks:
+        db-mysql:
+        nginx:
+    path: /opt/scripts/docker-compose.yml
+
+runcmd:
+- mkdir -p /opt/scripts
+- cd /opt/scripts
+- docker-compose up -d
