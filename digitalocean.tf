@@ -56,7 +56,7 @@ resource "digitalocean_firewall" "web" {
   inbound_rule {
     protocol    = "tcp"
     port_range  = "22"
-    source_addresses = ["0.0.0.0/0", "::/0"]
+    source_addresses = ["${chomp(data.http.myip.body)}/32"]
   }
 
   inbound_rule {
