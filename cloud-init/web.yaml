@@ -15,8 +15,9 @@ write_files:
           image: nginx:latest
           restart: always
           container_name: nginx_proxy
+          volumes:
+            - ${PWD}/ghost.conf:/etc/nginx/conf.d/ghost.conf
           ports:
-            - 443:443
             - 80:80
           depends_on:
             - ghost
@@ -55,6 +56,28 @@ write_files:
         db-mysql:
         nginx:
     path: /opt/scripts/docker-compose.yml
+  - content: |
+      server {
+        listen 80;
+        listen [::]:80;
+        server_name ${cloudflare_zone};
+  
+        gzip off;
+  
+        location / {
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header Host $http_host;
+          proxy_pass http://ghost:2368;
+          proxy_hide_header X-Powered-By;
+        }
+  
+        location ~ /.well-known {
+          allow all;
+        }
+      }
+    path: /opt/scripts/ghost.conf
 
 runcmd:
 - mkdir -p /opt/scripts

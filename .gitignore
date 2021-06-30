@@ -32,3 +32,6 @@ override.tf.json
 
 # Lock files
 *.terraform.lock*
+
+# Plan files
+*.plan*
