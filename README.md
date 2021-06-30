@@ -2,7 +2,8 @@
 
 A reproducable repo to spin up a containerized Ghost blog on Digital Ocean with Cloudflare in front. 
 
-> :warning: I use this for myself but you are welcome to use it as well. If you notice areas for improvement please leave feedback or open a PR.
+> :warning:  
+> I use this for myself but you are welcome to use it as well. If you notice areas for improvement please leave feedback or open a PR.
 
 ## Documentation/Usage
 
