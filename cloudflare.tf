@@ -7,6 +7,15 @@ resource "cloudflare_record" "origin" {
   proxied = true
 }
 
+resource "cloudflare_record" "www" {
+  zone_id = var.cloudflare_zone_id
+  type    = "CNAME"
+  name    = "www"
+  value   = cloudflare_record.origin.hostname
+  ttl     = "1"
+  proxied = true
+}
+
 resource "cloudflare_zone_settings_override" "zone_settings" {
   zone_id = var.cloudflare_zone_id
   settings {

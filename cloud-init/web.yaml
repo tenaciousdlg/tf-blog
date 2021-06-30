@@ -60,7 +60,7 @@ write_files:
       server {
         listen 80;
         listen [::]:80;
-        server_name ${cloudflare_zone};
+        server_name ${cloudflare_zone} www.${cloudflare_zone};
   
         gzip off;
   
