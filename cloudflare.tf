@@ -28,7 +28,7 @@ resource "cloudflare_zone_settings_override" "zone_settings" {
 # Nifty trick to get the IPv4 address that Terraform runs from. If you run it from your home then this is your IP
 
 data "http" "myip" {
-  url = "http://ipv4.icanhazip.com"
+  url = "https://api.ipify.org/"
 }
 
 resource "cloudflare_filter" "self_ip_lockdown" {
