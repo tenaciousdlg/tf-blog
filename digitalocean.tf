@@ -15,14 +15,19 @@ data "digitalocean_ssh_key" "default" {
   name = var.do_key_name
 }
 
+data "cloudflare_ip_ranges" "cloudflare" {}
+
 resource "digitalocean_droplet" "web" {
   image    = "docker-18-04"
   name     = "terraform-${random_id.namespace.hex}"
-  region   = "nyc3"
+  region   = "nyc1"
   size     = "s-1vcpu-1gb"
   ssh_keys = [ 
       data.digitalocean_ssh_key.default.id
   ]
+
+  # Attach a persistent volume
+  volume_ids = [digitalocean_volume.ghost_block.id]
 
   connection {
     host        = self.ipv4address
@@ -37,10 +42,22 @@ resource "digitalocean_droplet" "web" {
     "cloudflare_zone"     = var.cloudflare_zone,
     "mysql_user_password" = var.mysql_user_password,
     "mysql_password"      = var.mysql_password
+    "do_volume"           = digitalocean_volume.ghost_block.name
   })
 }
 
-data "cloudflare_ip_ranges" "cloudflare" {}
+resource "digitalocean_volume" "ghost_block" {
+  name                    = "ghost"
+  region                  = "nyc1"
+  size                    = 10
+  initial_filesystem_type = "ext4"
+  description             = "Persistent volume for Docker containers on droplet"
+}
+
+#resource "digitalocean_volume_attachment" "ghost_attach" {
+#  droplet_id = digitalocean_droplet.web.id
+#  volume_id  = digitalocean_volume.ghost_block.id
+#}
 
 resource "digitalocean_firewall" "web" {
   name = "terraform-ghost-fw"
