@@ -28,17 +28,17 @@ write_files:
           command: ["nginx", "-g", "daemon off;"]
 
         ghost:
-          image: ghost:4-alpine
+          image: ghost:latest
           restart: always
           container_name: ghost
           volumes:
-            - /mnt/${do_volume}/www_data:/var/www/html
+            - /mnt/${do_volume}/www_data:/var/lib/ghost/content
           environment:
-            # see https://docs.ghost.org/docs/config#section-running-ghost-with-config-env-variables
-            database_client: mariadb
-            database_connection_user: ghostuser
-            database_connection_password: ${mysql_user_password}
-            database_connection_database: ghost
+            database__client: mysql
+            database__connection__host: db-maria 
+            database__connection__user: ghostuser
+            database__connection__password: ${mysql_user_password}
+            database__connection__database: ghost
             url: http://${cloudflare_zone}
           depends_on:
             - db-maria
@@ -49,7 +49,7 @@ write_files:
         db-maria:
           image: mariadb:latest
           restart: always
-          container_name: ghost_db
+          container_name: db_maria
           volumes:
             - /mnt/${do_volume}/mysql_data:/var/lib/mysql
           environment:
@@ -95,5 +95,10 @@ write_files:
 
 runcmd:
 - mkdir -p /opt/scripts
+- mkdir -p /mnt/${do_volume}
+- mount -o discard,defaults,noatime /dev/disk/by-id/scsi-0DO_Volume_${do_volume} /mnt/${do_volume}
+- echo '/dev/disk/by-id/scsi-0DO_Volume_${do_volume} /mnt/${do_volume} ext4 defaults,nofail,discard 0 0' | sudo tee -a /etc/fstab
+- mkdir -p /mnt/${do_volume}/www_data
+- mkdir -p /mnt/${do_volume}/mysql_data
 - cd /opt/scripts
 - docker-compose up -d
