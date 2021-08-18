@@ -40,38 +40,40 @@ data "http" "myip" {
   url = "https://api.ipify.org/"
 }
 
-resource "cloudflare_filter" "self_ip_lockdown" {
-  zone_id     = var.cloudflare_zone_id
-  description = "Firewall filter using the data.http.myip object to set up a cheap security solution for the ghost admin endpoint"
-  expression  = "(lower(http.request.uri.path) eq \"/ghost\" and ip.src ne ${chomp(data.http.myip.body)})"
-}
+# Uncomment the below two resources if you want to lockdown the ghost admin path to the IP sourced by the data.http.myip object
 
-resource "cloudflare_firewall_rule" "ip_lockdown" {
-  zone_id     = var.cloudflare_zone_id
-  description = "Lockdown /ghost to a specific IP"
-  filter_id   = cloudflare_filter.self_ip_lockdown.id
-  action      = "block"
-}
+#resource "cloudflare_filter" "self_ip_lockdown" {
+#  zone_id     = var.cloudflare_zone_id
+#  description = "Firewall filter using the data.http.myip object to set up a cheap security solution for the ghost admin endpoint"
+#  expression  = "(lower(http.request.uri.path) eq \"/ghost\" and ip.src ne ${chomp(data.http.myip.body)})"
+#}
+#
+#resource "cloudflare_firewall_rule" "ip_lockdown" {
+#  zone_id     = var.cloudflare_zone_id
+#  description = "Lockdown /ghost to a specific IP"
+#  filter_id   = cloudflare_filter.self_ip_lockdown.id
+#  action      = "block"
+#}
 
 /*
  * Access policy if I decide to go that route
  */
 
-#resource "cloudflare_access_application" "ghost_admin" {
-#  zone_id          = var.cloudflare_zone_id
-#  name             = "Access protection for Ghost login"
-#  domain           = "${var.cloudflare_zone}/ghost"
-#  session_duration = "1h"
-#}
+resource "cloudflare_access_application" "ghost_admin" {
+  zone_id          = var.cloudflare_zone_id
+  name             = "Access protection for Ghost login"
+  domain           = "${var.cloudflare_zone}/ghost"
+  session_duration = "1h"
+}
 
-#resource "cloudflare_access_policy" "ghost_policy" {
-#  application_id = cloudflare_access_application.ghost_admin.id
-#  zone_id        = var.cloudflare_zone_id
-#  name           = "Login protection for Ghost admin"
-#  precedence     = "1"
-#  decision       = "allow"
-#
-#  include {
-#    email = [var.cloudflare_email]
-#  }
-#}
+resource "cloudflare_access_policy" "ghost_policy" {
+  application_id = cloudflare_access_application.ghost_admin.id
+  zone_id        = var.cloudflare_zone_id
+  name           = "Login protection for Ghost admin"
+  precedence     = "1"
+  decision       = "allow"
+
+  include {
+    email = [var.cloudflare_email]
+  }
+}
